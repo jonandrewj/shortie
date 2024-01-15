@@ -1,0 +1,95 @@
+openapi: 3.0.3
+info:
+  title: Shortie API
+  version: 0.1.0
+  description: An API for creating, using, and deleting shortened URLs
+paths:
+  /shortie:
+    post:
+      summary: Create a short URL for the provided url
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                expiration:
+                  type: integer
+                  description: | 
+                    A unix timestamp (second precision) for the expiration of this short url. 
+                    If not provided, the URL will not expire.
+            example:
+              url: https://my-long-url.hosting.com/lots/of/data/in/the/path
+              expiration: 1730689222
+      responses:
+        '200':
+          description: The short url
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shortUrl:
+                    type: string
+              example:
+                shortUrl: http://localhost:8421/shortie/abcdef
+        '400':
+          description: Bad request
+  /shortie/{id}:
+    get:
+      summary: Use a short URL and redirect
+      parameters:
+        - $ref: '#/components/parameters/idPathParam'
+      responses:
+        '307':
+          description: A redirect url exists and we're redirecting you
+          headers:
+            Location:
+              description: the redirect url
+              schema:
+                type: string
+        '404':
+          description: The shortie id is not found or has expired
+    delete:
+      summary: Delete a short url
+      parameters:
+        - $ref: '#/components/parameters/idPathParam'
+      responses:
+        '200':
+          description: The redirect was successfully deleted
+  /shortie/{id}/stats:
+    get:
+      summary: Retrieve the usage statistics for a shortened url
+      parameters:
+        - $ref: '#/components/parameters/idPathParam'
+      responses:
+        '200':
+          description: the usage statistics for the shortened url
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  lastDay:
+                    type: integer
+                  lastWeek:
+                    type: integer
+                  allTime:
+                    type: integer
+              example:
+                lastDay: 7
+                lastWeek: 1111111
+                allTime: 2222222
+
+components:
+  parameters:
+    idPathParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      example: abcdefg
